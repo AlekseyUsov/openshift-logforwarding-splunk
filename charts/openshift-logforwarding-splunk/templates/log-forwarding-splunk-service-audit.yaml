@@ -1,18 +1,18 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: {{ template "openshift-logforwarding-splunk.fullname" . }}
+  name: {{ template "openshift-logforwarding-splunk.fullname" . }}-audit
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/component: fluentd
 {{ include "openshift-logforwarding-splunk.labels" . | indent 4 }}
 spec:
   ports:
-    - name: 24224-tcp
+    - name: 24226-tcp
       protocol: TCP
-      port: 24224
+      port: 24226
       targetPort: 24224
   selector:
-    app: {{ template "openshift-logforwarding-splunk.fullname" . }}
+    app: {{ template "openshift-logforwarding-splunk.fullname" . }}-audit
   type: ClusterIP
   sessionAffinity: None

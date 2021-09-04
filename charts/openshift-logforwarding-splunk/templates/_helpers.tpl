@@ -98,8 +98,22 @@ Return the target Kubernetes version
 {{/*
 Return the protocol for Fluentd forwarding
 */}}
-{{- define "openshift-logforwarding-splunk.fluentd.protocol" -}}
-{{- if .Values.forwarding.fluentd.ssl -}}
+{{- define "openshift-logforwarding-splunk.app.fluentd.protocol" -}}
+{{- if .Values.forwarding.app.fluentd.ssl -}}
+{{- print "tls" -}}
+{{- else -}}
+{{- print "tcp" -}}
+{{- end -}}
+{{- end -}}
+{{- define "openshift-logforwarding-splunk.infra.fluentd.protocol" -}}
+{{- if .Values.forwarding.infra.fluentd.ssl -}}
+{{- print "tls" -}}
+{{- else -}}
+{{- print "tcp" -}}
+{{- end -}}
+{{- end -}}
+{{- define "openshift-logforwarding-splunk.audit.fluentd.protocol" -}}
+{{- if .Values.forwarding.audit.fluentd.ssl -}}
 {{- print "tls" -}}
 {{- else -}}
 {{- print "tcp" -}}

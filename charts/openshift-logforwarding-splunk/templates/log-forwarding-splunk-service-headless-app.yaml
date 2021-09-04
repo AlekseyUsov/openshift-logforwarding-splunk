@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: {{ template "openshift-logforwarding-splunk.fullname" . }}-headless
+  name: {{ template "openshift-logforwarding-splunk.fullname" . }}-app-headless
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/component: fluentd
@@ -13,6 +13,6 @@ spec:
       port: 24224
       targetPort: 24224
   selector:
-    app: {{ template "openshift-logforwarding-splunk.fullname" . }}
+    app: {{ template "openshift-logforwarding-splunk.fullname" . }}-app
   clusterIP: None
   sessionAffinity: None

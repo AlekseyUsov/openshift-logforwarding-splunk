@@ -1,30 +1,31 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: {{ template "openshift-logforwarding-splunk.fullname" . }}
+  name: {{ template "openshift-logforwarding-splunk.fullname" . }}-app
   labels:
     app.kubernetes.io/component: fluentd
 {{ include "openshift-logforwarding-splunk.labels" . | indent 4 }}
 data:
-  fluentd-loglevel: {{ .Values.forwarding.fluentd.loglevel | squote }}
-  splunk-insecure: {{ .Values.forwarding.splunk.insecure | squote }}
-  splunk-hostname: {{ .Values.forwarding.splunk.hostname | squote }}
-  splunk-port: {{ .Values.forwarding.splunk.port | squote  }}
-  splunk-protocol: {{ .Values.forwarding.splunk.protocol | squote  }}
-  splunk-index: {{ .Values.forwarding.splunk.index | squote  }}
-  splunk-sourcetype: {{ .Values.forwarding.splunk.sourcetype | squote  }}
-  splunk-source: {{ .Values.forwarding.splunk.source | squote  }}
+  fluentd-loglevel: {{ .Values.forwarding.app.fluentd.loglevel | squote }}
+  splunk-insecure: {{ .Values.forwarding.app.splunk.insecure | squote }}
+  splunk-hostname: {{ .Values.forwarding.app.splunk.hostname | squote }}
+  splunk-port: {{ .Values.forwarding.app.splunk.port | squote  }}
+  splunk-protocol: {{ .Values.forwarding.app.splunk.protocol | squote  }}
+  splunk-index: {{ .Values.forwarding.app.splunk.index | squote  }}
+  splunk-sourcetype: {{ .Values.forwarding.audit.splunk.sourcetype | squote  }}
+  splunk-source: {{ .Values.forwarding.app.splunk.source | squote  }}
   td-agent.conf: |
 
     <system>
       log_level "#{ENV['LOG_LEVEL'] }"
+      workers {{ .Values.forwarding.app.fluentd.workers }}
     </system>
 
     <source>
       @type  forward
       @id    input1
       port  24224
-{{ if .Values.forwarding.fluentd.ssl }}
+{{ if .Values.forwarding.app.fluentd.ssl }}
       <transport tls>
         cert_path /secret/fluentd/tls.crt
         private_key_path /secret/fluentd/tls.key
@@ -32,7 +33,7 @@ data:
       </transport>
 {{ end }}
 
-{{ if .Values.forwarding.fluentd.ssl }}
+{{ if .Values.forwarding.app.fluentd.ssl }}
       <security>
         shared_key "#{ENV['SHARED_KEY'] }"
         self_hostname "#{ENV['HOSTNAME']}"
@@ -51,10 +52,10 @@ data:
       hec_port "#{ENV['SPLUNK_PORT'] }"
       hec_token "#{ENV['SPLUNK_TOKEN'] }"
       host "#{ENV['NODE_NAME']}"
-      {{- if and (not .Values.forwarding.splunk.insecure) .Values.forwarding.splunk.caFile }}
+      {{- if and (not .Values.forwarding.app.splunk.insecure) .Values.forwarding.app.splunk.caFile }}
       ca_file /secrets/splunk/splunk-ca.crt
       {{- end }}
-      {{- with .Values.forwarding.fluentd.buffer }}
+      {{- with .Values.forwarding.app.fluentd.buffer }}
       <buffer>
       {{- range $parameter, $value := . }}
         {{ $parameter }} {{ $value }}

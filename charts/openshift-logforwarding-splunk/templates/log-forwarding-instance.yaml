@@ -10,12 +10,26 @@ metadata:
 {{ include "openshift-logforwarding-splunk.labels" . | indent 4 }}
 spec:
   outputs:
-    - url: "{{ include "openshift-logforwarding-splunk.fluentd.protocol" . }}://{{ $fullName }}.{{ .Release.Namespace }}.svc:{{ $.Values.forwarding.fluentd.port }}"
-      name: {{ $fullName }}
+    - url: "{{ include "openshift-logforwarding-splunk.app.fluentd.protocol" . }}://{{ $fullName }}-app.{{ .Release.Namespace }}.svc:{{ $.Values.forwarding.app.fluentd.port }}"
+      name: {{ $fullName }}-app
       type: fluentdForward
-      {{- if .Values.forwarding.fluentd.ssl }}
+      {{- if .Values.forwarding.app.fluentd.ssl }}
       secret:
-        name: {{ $fullName }}
+        name: {{ $fullName }}-app
+      {{- end }}
+    - url: "{{ include "openshift-logforwarding-splunk.infra.fluentd.protocol" . }}://{{ $fullName }}-infra.{{ .Release.Namespace }}.svc:{{ $.Values.forwarding.infra.fluentd.port }}"
+      name: {{ $fullName }}-infra
+      type: fluentdForward
+      {{- if .Values.forwarding.infra.fluentd.ssl }}
+      secret:
+        name: {{ $fullName }}-infra
+      {{- end }}
+    - url: "{{ include "openshift-logforwarding-splunk.audit.fluentd.protocol" . }}://{{ $fullName }}-audit.{{ .Release.Namespace }}.svc:{{ $.Values.forwarding.audit.fluentd.port }}"
+      name: {{ $fullName }}-audit
+      type: fluentdForward
+      {{- if .Values.forwarding.audit.fluentd.ssl }}
+      secret:
+        name: {{ $fullName }}-audit
       {{- end }}
   pipelines:
       {{- if or .Values.openshift.forwarding.app.elasticsearch .Values.openshift.forwarding.app.splunk }}
@@ -27,7 +41,7 @@ spec:
         - default
       {{- end }}
       {{- if or .Values.openshift.forwarding.app.splunk }}
-        - {{ $fullName }}
+        - {{ $fullName }}-app
       {{- end }}
       {{- end }}
       {{- if or .Values.openshift.forwarding.infra.elasticsearch .Values.openshift.forwarding.infra.splunk }}
@@ -39,7 +53,7 @@ spec:
         - default
       {{- end }}
       {{- if or .Values.openshift.forwarding.infra.splunk }}
-        - {{ $fullName }}
+        - {{ $fullName }}-infra
       {{- end }}
       {{- end }}
       {{- if or .Values.openshift.forwarding.audit.elasticsearch .Values.openshift.forwarding.audit.splunk }}
@@ -51,7 +65,7 @@ spec:
         - default
       {{- end }}
       {{- if or .Values.openshift.forwarding.audit.splunk }}
-        - {{ $fullName }}
+        - {{ $fullName }}-audit
       {{- end }}
       {{- end }}
 {{- end }}

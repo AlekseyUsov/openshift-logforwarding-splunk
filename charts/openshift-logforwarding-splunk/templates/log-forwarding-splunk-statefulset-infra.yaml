@@ -5,30 +5,30 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-infra
   labels:
     app.kubernetes.io/component: fluentd
 {{ include "openshift-logforwarding-splunk.labels" . | indent 4 }}
 spec:
-  replicas: {{ .Values.forwarding.fluentd.replicas }}
-  serviceName: {{ $fullName }}-headless
+  replicas: {{ .Values.forwarding.infra.fluentd.replicas }}
+  serviceName: {{ $fullName }}-infra-headless
   updateStrategy:
-{{ toYaml .Values.forwarding.fluentd.updateStrategy | indent 4 }}
+{{ toYaml .Values.forwarding.infra.fluentd.updateStrategy | indent 4 }}
   selector:
     matchLabels:
-      app: {{ $fullName }}
+      app: {{ $fullName }}-infra
   template:
     metadata:
       labels:
-        app: {{ $fullName }}
+        app: {{ $fullName }}-infra
     spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       containers:
         - resources:
-            {{- toYaml .Values.forwarding.fluentd.resources | nindent 12 }}
+            {{- toYaml .Values.forwarding.infra.fluentd.resources | nindent 12 }}
           terminationMessagePath: /dev/termination-log
-          name: {{ $fullName }}
+          name: {{ $fullName }}-infra
           env:
             - name: NODE_NAME
               valueFrom:
@@ -38,58 +38,58 @@ spec:
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: fluentd-loglevel
             - name: SHARED_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: shared_key
             - name: SPLUNK_HOST
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: splunk-hostname
             - name: SPLUNK_SOURCETYPE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: splunk-sourcetype
             - name: SPLUNK_SOURCE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: splunk-source
             - name: SPLUNK_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: splunk-port
             - name: SPLUNK_PROTOCOL
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: splunk-protocol
             - name: SPLUNK_INSECURE
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: splunk-insecure
             - name: SPLUNK_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: hec-token
             - name: SPLUNK_INDEX
               valueFrom:
                 configMapKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: splunk-index
-            {{- if .Values.forwarding.fluentd.ssl }}
+            {{- if .Values.forwarding.infra.fluentd.ssl }}
             - name: FLUENTD_SSL_PASSPHRASE
               valueFrom:
                 secretKeyRef:
-                  name: {{ $fullName }}
+                  name: {{ $fullName }}-infra
                   key: fluentd-ssl-passsphrase
             {{- end }}
           imagePullPolicy: Always
@@ -97,22 +97,22 @@ spec:
             - name: {{ $logForwardingConfig }}
               readOnly: true
               mountPath: /etc/fluent/
-            {{- if .Values.forwarding.fluentd.ssl }}
+            {{- if .Values.forwarding.infra.fluentd.ssl }}
             - mountPath: /secret/fluentd
-              name: {{ $fullName }}
+              name: {{ $fullName }}-infra
               readOnly: true
             {{- end }}
             - name: buffer
               mountPath: "/var/log/fluentd"
-            {{- if and (not .Values.forwarding.splunk.insecure) .Values.forwarding.splunk.caFile }}
+            {{- if and (not .Values.forwarding.infra.splunk.insecure) .Values.forwarding.infra.splunk.caFile }}
             - mountPath: /secret/splunk
               name: splunk-certs
               readOnly: true
             {{- end }}
           terminationMessagePolicy: File
-          image: {{ .Values.forwarding.fluentd.image }}
+          image: {{ .Values.forwarding.infra.fluentd.image }}
           args:
-{{- if .Values.forwarding.fluentd.scl }}
+{{- if .Values.forwarding.infra.fluentd.scl }}
             - scl
             - enable
             - rh-ruby25
@@ -139,65 +139,65 @@ spec:
               name: forwarder-udp
               protocol: UDP
       serviceAccount: {{ $fullName }}
-      {{- with .Values.forwarding.fluentd.nodeSelector }}
+      {{- with .Values.forwarding.infra.fluentd.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- with .Values.forwarding.fluentd.affinity }}
+    {{- with .Values.forwarding.infra.fluentd.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.forwarding.fluentd.tolerations }}
+    {{- with .Values.forwarding.infra.fluentd.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
       volumes:
         - name: {{ $logForwardingConfig }}
           configMap:
-            name: {{ $fullName }}
+            name: {{ $fullName }}-infra
             items:
               - key: td-agent.conf
                 path: fluent.conf
             defaultMode: 420
             optional: true
-        {{- if .Values.forwarding.fluentd.ssl }}
-        - name: {{ $fullName }}
+        {{- if .Values.forwarding.infra.fluentd.ssl }}
+        - name: {{ $fullName }}-infra
           secret:
-            secretName: {{ $fullName }}
+            secretName: {{ $fullName }}-infra
             items:
               - key: {{ $logForwardingCertificateName }}.crt
                 path: tls.crt
               - key: {{ $logForwardingCertificateName }}.key
                 path: tls.key
         {{- end }}
-        {{- if not .Values.forwarding.fluentd.persistence.enabled }}
+        {{- if not .Values.forwarding.infra.fluentd.persistence.enabled }}
         - name: buffer
           emptyDir: {}
         {{- end }}
-        {{- if and (not .Values.forwarding.splunk.insecure) .Values.forwarding.splunk.caFile }}
+        {{- if and (not .Values.forwarding.infra.splunk.insecure) .Values.forwarding.infra.splunk.caFile }}
         - name: splunk-certs
           secret:
-            secretName: {{ $fullName }}-splunk
+            secretName: {{ $fullName }}-infra-splunk
             items:
               - key: splunk-ca.crt
                 path: splunk-ca.crt
         {{- end }}
       dnsPolicy: ClusterFirst
-  {{- if .Values.forwarding.fluentd.persistence.enabled }}
+  {{- if .Values.forwarding.infra.fluentd.persistence.enabled }}
   volumeClaimTemplates:
   - metadata:
       name: buffer
     spec:
       accessModes:
-      - {{ .Values.forwarding.fluentd.persistence.accessMode | quote }}
+      - {{ .Values.forwarding.infra.fluentd.persistence.accessMode | quote }}
       resources:
         requests:
-          storage: {{ .Values.forwarding.fluentd.persistence.size }}
-      {{- if .Values.forwarding.fluentd.persistence.storageClass }}
-      {{- if (eq "-" .Values.forwarding.fluentd.persistence.storageClass) }}
+          storage: {{ .Values.forwarding.infra.fluentd.persistence.size }}
+      {{- if .Values.forwarding.infra.fluentd.persistence.storageClass }}
+      {{- if (eq "-" .Values.forwarding.infra.fluentd.persistence.storageClass) }}
       storageClassName: ""
       {{- else }}
-      storageClassName: "{{ .Values.forwarding.fluentd.persistence.storageClass }}"
+      storageClassName: "{{ .Values.forwarding.infra.fluentd.persistence.storageClass }}"
       {{- end }}
       {{- end }}
   {{- end }}
