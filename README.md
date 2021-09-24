@@ -32,6 +32,11 @@ The following prerequisites must be satisfied prior to deploying this integratio
 
 The primary assets contained within this repository is a Helm Chart to deploy LogForwarding. Please refer to the [values.yaml](charts/openshift-logforwarding-splunk/values.yaml) file for the customizing the installation. 
 
+# Architecture
+The diagram below illustrates how the solution works alongside default EFK stack deployed by Logging Operator.
+
+![Screenshot](images/log_forwarding_public.png)
+
 ### SSL Communication
 
 #### Fluentd
